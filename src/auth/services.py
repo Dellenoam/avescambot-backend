@@ -3,7 +3,7 @@ from typing import List, Tuple
 import uuid
 from fastapi import HTTPException
 from .schemas import AccessToken, AuthUser, UserAsResponse, UserCreate, UserLogin
-from .utils import encode_jwt, validate_password
+from .utils import encode_jwt, validate_password_hash
 from .repository import AuthRepository
 from config import settings
 
@@ -24,7 +24,7 @@ async def validate_auth_user(user: UserLogin) -> AuthUser:
     if not user_from_db:
         raise unauthenticated_exception
 
-    if validate_password(user.password, user_from_db.hashed_password) is False:
+    if validate_password_hash(user.password, user_from_db.hashed_password) is False:
         raise unauthenticated_exception
 
     if not user_from_db.is_active:

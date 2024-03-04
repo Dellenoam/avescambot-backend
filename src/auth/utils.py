@@ -1,3 +1,4 @@
+import re
 import bcrypt
 import jwt
 from config import settings
@@ -28,5 +29,5 @@ def hash_password(password: str) -> str:
     return bcrypt.hashpw(password_bytes, salt).decode("utf-8")
 
 
-def validate_password(password: str, hashed_password: str) -> bool:
+def validate_password_hash(password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(password.encode(), hashed_password.encode("utf-8"))
