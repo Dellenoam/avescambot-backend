@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from .schemas import AccessToken, AuthUser, UserAsResponse, UserCreate, UserLogin
 from .utils import encode_jwt, validate_password
 from .repository import AuthRepository
-from src.config import settings
+from config import settings
 
 repo = AuthRepository()
 
@@ -63,7 +63,10 @@ async def refresh_access_token_and_refresh_session(
 
     await repo.delete_refresh_session(refresh_session)
 
-    if refresh_session.exp < datetime.utcnow() or refresh_session.fingerprint != fingerprint:
+    if (
+        refresh_session.exp < datetime.utcnow()
+        or refresh_session.fingerprint != fingerprint
+    ):
         raise HTTPException(status_code=401, detail="Invalid refresh session")
 
     access_token = _create_access_token(int(refresh_session.sub))
@@ -83,14 +86,13 @@ def _create_access_token(user_id: int, scopes: List[str] = []) -> str:
             "sub": user_id,
             "scopes": scopes,
             "iat": datetime.utcnow(),
-            "exp": datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes),
+            "exp": datetime.utcnow()
+            + timedelta(minutes=settings.token.access_token_expire_minutes),
         }
     )
 
 
-async def _create_refresh_session(
-    user_id: int, fingerprint: str
-) -> str:
+async def _create_refresh_session(user_id: int, fingerprint: str) -> str:
     if not user_id:
         ValueError("User ID is required to create refresh session")
 
@@ -103,7 +105,7 @@ async def _create_refresh_session(
         fingerprint=fingerprint,
         refresh_session_uuid=refresh_session_uuid,
         iat=datetime.utcnow(),
-        exp=datetime.utcnow() + timedelta(days=settings.refresh_session_expire_days),
+        exp=datetime.utcnow() + timedelta(days=settings.token.refresh_session_expire_days),
     )
 
     return refresh_session_uuid

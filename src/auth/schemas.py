@@ -28,3 +28,7 @@ class AuthUser(UserAsResponse):
 
 class AccessToken(BaseModel):
     access_token: str
+
+
+class RefreshSessionInput(BaseModel):
+    fingerprint: str

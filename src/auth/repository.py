@@ -1,11 +1,10 @@
 from datetime import datetime
-from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import select
 from .utils import hash_password
 from .models import RefreshSession, User
 from .schemas import UserAsResponse, UserCreate
-from src.database import session
+from database import session
 
 
 class AuthRepository:
@@ -14,7 +13,7 @@ class AuthRepository:
         self._refresh_session_model = RefreshSession
         self._session = session
 
-    async def create_user(self, new_user: UserCreate) -> UserAsResponse:  # type: ignore
+    async def create_user(self, new_user: UserCreate) -> UserAsResponse:
         async with self._session() as session:
             if await self.get_user_by_email(new_user.email):
                 raise HTTPException(status_code=409, detail="User already exists")
