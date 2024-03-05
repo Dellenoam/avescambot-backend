@@ -8,7 +8,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    username: str
+    username: str = Field(min_length=4, max_length=32, examples=["username"])
     password: str = Field(min_length=8, max_length=64, examples=["StrongPassword123!"])
 
     @validator("password")
@@ -26,23 +26,28 @@ class UserCreate(UserBase):
 
 
 class UserLogin(UserBase):
-    password: str
-    fingerprint: str
+    password: str = Field(examples=["StrongPassword123!"])
+    fingerprint: str = Field(examples=["user_browser_fingerprint"])
 
 
 class UserAsResponse(UserBase):
     id: int
-    username: str
+    username: str = Field(examples=["username"])
     created_at: datetime
 
 
 class AuthUser(UserAsResponse):
-    fingerprint: str
+    fingerprint: str = Field(examples=["user_browser_fingerprint"])
+
+
+class Tokens(BaseModel):
+    access_token: str = Field(examples=["access_token"])
+    refresh_token_uuid: str = Field(examples=["refresh_token_uuid"])
 
 
 class AccessToken(BaseModel):
-    access_token: str
+    access_token: str = Field(examples=["access_token"])
 
 
-class RefreshSessionInput(BaseModel):
-    fingerprint: str
+class UserDetails(BaseModel):
+    fingerprint: str = Field(examples=["user_browser_fingerprint"])

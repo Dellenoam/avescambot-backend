@@ -14,11 +14,11 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow())
 
 
-class RefreshSession(Base):
-    __tablename__ = "refresh_sessions"
+class RefreshToken(Base):
+    __tablename__ = "refresh_tokens"
 
     sub: Mapped[int] = mapped_column(nullable=False)
     fingerprint: Mapped[str] = mapped_column(nullable=False)
-    refresh_session_uuid: Mapped[str] = mapped_column(nullable=False)
+    refresh_token_uuid: Mapped[str] = mapped_column(nullable=False)
     iat: Mapped[datetime] = mapped_column(nullable=False)
     exp: Mapped[datetime] = mapped_column(nullable=False)

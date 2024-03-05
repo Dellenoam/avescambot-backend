@@ -6,26 +6,26 @@ BASE_DIR = Path(__file__).parent.parent
 
 
 class DBSettings(BaseSettings):
-    db_url: str
+    DB_URL: str
 
 class CryptoSettings(BaseSettings):
-    private_key_path: Path = BASE_DIR / "certs" / "private.pem"
-    public_key_path: Path = BASE_DIR / "certs" / "public.pem"
-    algorithm: str = "RS256"
+    PRIVATE_KEY_PATH: Path = BASE_DIR / "certs" / "private.pem"
+    PUBLIC_KEY_PATH: Path = BASE_DIR / "certs" / "public.pem"
+    ALGORITHM: str = "RS256"
 
 class TokenSettings(BaseSettings):
-    access_token_expire_minutes: PositiveInt = 7
-    refresh_session_expire_days: PositiveInt = 7
+    ACCESS_TOKEN_EXPIRE_MINUTES: PositiveInt = 7
+    REFRESH_TOKEN_EXPIRE_DAYS: PositiveInt = 7
 
 class CookieSettings(BaseSettings):
-    cookie_secure_flag: bool = False
-    cookie_paths: str = "/api/auth/refresh"
+    COOKIE_SECURE_FLAG: bool 
+    COOKIE_PATHS: str = "/api/auth/refresh"
 
 class Settings(BaseSettings):
     db: DBSettings = DBSettings() # type: ignore
     crypto: CryptoSettings = CryptoSettings()
     token: TokenSettings = TokenSettings()
-    cookie: CookieSettings = CookieSettings()
+    cookie: CookieSettings = CookieSettings() # type: ignore
 
     model_config = SettingsConfigDict(env_file='.env')
 

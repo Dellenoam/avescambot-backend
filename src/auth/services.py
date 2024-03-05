@@ -1,111 +1,189 @@
 from datetime import datetime, timedelta
-from typing import List, Tuple
 import uuid
 from fastapi import HTTPException
-from .schemas import AccessToken, AuthUser, UserAsResponse, UserCreate, UserLogin
-from .utils import encode_jwt, validate_password_hash
-from .repository import AuthRepository
+from repository import AbstractRepository
+from .schemas import (
+    AuthUser,
+    Tokens,
+    UserAsResponse,
+    UserCreate,
+    UserLogin,
+)
+from .utils import encode_jwt, hash_password, validate_password_hash
 from config import settings
 
-repo = AuthRepository()
+
+class AuthService:
+    def __init__(self, repo: AbstractRepository):
+        self.repo = repo
+
+    async def create_new_user(self, user_to_create: UserCreate) -> UserAsResponse:
+        """
+        Create a new user.
+
+        Args:
+            user_to_create (UserCreate): Pydantic model representing the user to create.
+
+        Returns:
+            UserAsResponse: Pydantic model representing the created user.
+        """
+        if await self.repo.get_one(username=user_to_create.username):
+            raise HTTPException(
+                status_code=409, detail="User with this username already exists"
+            )
+        if await self.repo.get_one(email=user_to_create.email):
+            raise HTTPException(
+                status_code=409, detail="User with this email already exists"
+            )
+
+        user_to_create_dict = user_to_create.model_dump()
+        user_to_create_dict["hashed_password"] = hash_password(
+            user_to_create_dict["password"]
+        )
+        del user_to_create_dict["password"]
+
+        new_user = await self.repo.add_one(user_to_create_dict)
+        new_user = UserAsResponse(
+            id=new_user.id,
+            email=new_user.email,
+            username=new_user.username,
+            created_at=new_user.created_at,
+        )
+        return new_user
+
+    async def validate_user(self, user: UserLogin) -> AuthUser:
+        """
+        Validate the user credentials.
+
+        Args:
+            user (UserLogin): Pydantic model representing the user to login.
+
+        Returns:
+            AuthUser: Pydantic model representing the authenticated user.
+        """
+        unauthenticated_exception = HTTPException(
+            status_code=401, detail="Could not validate credentials"
+        )
+
+        user_from_db = await self.repo.get_one(email=user.email)
+
+        if not user_from_db:
+            raise unauthenticated_exception
+
+        if validate_password_hash(user.password, user_from_db.hashed_password) is False:
+            raise unauthenticated_exception
+
+        if not user_from_db.is_active:
+            raise HTTPException(status_code=403, detail="Inactive user")
+
+        # if not user_from_db.is_verified:
+        #     raise HTTPException(status_code=403, detail="User not verified")
+
+        return AuthUser(
+            id=user_from_db.id,
+            username=user_from_db.username,
+            email=user_from_db.email,
+            created_at=user_from_db.created_at,
+            fingerprint=user.fingerprint,
+        )
 
 
-async def process_user_registration(user: UserCreate) -> UserAsResponse:
-    return await repo.create_user(user)
+class TokenService:
+    def __init__(self, repo: AbstractRepository):
+        self.repo = repo
 
+    async def create_access_token_and_refresh_token(self, user: AuthUser) -> Tokens:
+        """
+        Create an access token and a refresh token for the authenticated user.
 
-async def validate_auth_user(user: UserLogin) -> AuthUser:
-    unauthenticated_exception = HTTPException(
-        status_code=401, detail="Could not validate credentials"
-    )
+        Args:
+            user (AuthUser): Pydantic model representing the authenticated user.
 
-    user_from_db = await repo.get_user_by_email(user.email)
+        Returns:
+            Tokens: Pydantic model representing the access and refresh tokens.
+        """
+        access_token = await self._create_access_token(user.id)
+        refresh_token_uuid = await self._create_refresh_token(user.id, user.fingerprint)
 
-    if not user_from_db:
-        raise unauthenticated_exception
+        return Tokens(access_token=access_token, refresh_token_uuid=refresh_token_uuid)
 
-    if validate_password_hash(user.password, user_from_db.hashed_password) is False:
-        raise unauthenticated_exception
+    async def renew_access_token_and_refresh_token(
+        self, refresh_token_uuid: str, fingerprint: str
+    ) -> Tokens:
+        """
+        Renew an access token and a refresh token.
 
-    if not user_from_db.is_active:
-        raise HTTPException(status_code=403, detail="Inactive user")
+        Args:
+            refresh_token_uuid (str): The refresh token UUID to be renewed.
+            fingerprint (str): The fingerprint of the device from which the refresh token was generated.
 
-    # if not user_from_db.is_verified:
-    #     raise HTTPException(status_code=403, detail="User not verified")
+        Returns:
+            Tokens: Pydantic model representing the access and refresh tokens.
+        """
+        refresh_token = await self.repo.get_one(refresh_token_uuid=refresh_token_uuid)
 
-    return AuthUser(
-        id=user_from_db.id,
-        username=user_from_db.username,
-        email=user_from_db.email,
-        created_at=user_from_db.created_at,
-        fingerprint=user.fingerprint,
-    )
+        if not refresh_token:
+            raise HTTPException(status_code=401, detail="Refresh token not found")
 
+        await self.repo.delete_one(refresh_token)
 
-async def create_access_token_and_refresh_session(
-    user: AuthUser,
-) -> Tuple[str, AccessToken]:
-    access_token = _create_access_token(user.id)
-    refresh_session = await _create_refresh_session(user.id, user.fingerprint)
+        if (
+            refresh_token.exp < datetime.utcnow()
+            or refresh_token.fingerprint != fingerprint
+        ):
+            raise HTTPException(status_code=401, detail="Invalid refresh token")
 
-    return refresh_session, AccessToken(access_token=access_token)
+        access_token = await self._create_access_token(refresh_token.sub)
+        new_refresh_token_uuid = await self._create_refresh_token(
+            refresh_token.sub, refresh_token.fingerprint
+        )
 
+        return Tokens(
+            access_token=access_token, refresh_token_uuid=new_refresh_token_uuid
+        )
 
-async def refresh_access_token_and_refresh_session(
-    refresh_session_uuid: str, fingerprint: str
-) -> Tuple[str, AccessToken]:
-    refresh_session = await repo.get_refresh_session_by_refresh_session_uuid(
-        refresh_session_uuid
-    )
+    async def _create_access_token(self, user_id: int) -> str:
+        """
+        Create an access token for the user.
 
-    if not refresh_session:
-        raise HTTPException(status_code=401, detail="Refresh session not found")
+        Args:
+            user_id (int): The ID of the user for whom the access token is being created.
 
-    await repo.delete_refresh_session(refresh_session)
+        Returns:
+            str: The generated access token encoded in JWT.
+        """
+        access_token = encode_jwt(
+            payload={
+                "sub": user_id,
+                "scopes": [],
+                "iat": datetime.utcnow(),
+                "exp": datetime.utcnow()
+                + timedelta(minutes=settings.token.ACCESS_TOKEN_EXPIRE_MINUTES),
+            }
+        )
 
-    if (
-        refresh_session.exp < datetime.utcnow()
-        or refresh_session.fingerprint != fingerprint
-    ):
-        raise HTTPException(status_code=401, detail="Invalid refresh session")
+        return access_token
 
-    access_token = _create_access_token(int(refresh_session.sub))
-    new_refresh_session = await _create_refresh_session(
-        int(refresh_session.sub), refresh_session.fingerprint
-    )
+    async def _create_refresh_token(self, user_id: int, fingerprint: str) -> str:
+        """
+        Create a refresh token for the user.
 
-    return new_refresh_session, AccessToken(access_token=access_token)
+        Args:
+            user_id (int): The user ID for whom the refresh token is being created.
+            fingerprint (str): The fingerprint of the device from which the refresh token was generated.
 
-
-def _create_access_token(user_id: int, scopes: List[str] = []) -> str:
-    if not user_id:
-        raise ValueError("User ID is required to create access token")
-
-    return encode_jwt(
-        payload={
+        Returns:
+            str: The generated refresh token UUID.
+        """
+        refresh_token_uuid = str(uuid.uuid4())
+        payload = {
             "sub": user_id,
-            "scopes": scopes,
+            "fingerprint": fingerprint,
+            "refresh_token_uuid": refresh_token_uuid,
             "iat": datetime.utcnow(),
             "exp": datetime.utcnow()
-            + timedelta(minutes=settings.token.access_token_expire_minutes),
+            + timedelta(days=settings.token.REFRESH_TOKEN_EXPIRE_DAYS),
         }
-    )
+        await self.repo.add_one(payload)
 
-
-async def _create_refresh_session(user_id: int, fingerprint: str) -> str:
-    if not user_id:
-        ValueError("User ID is required to create refresh session")
-
-    if not fingerprint:
-        ValueError("Fingerprint is required to create refresh session")
-
-    refresh_session_uuid = str(uuid.uuid4())
-    await repo.create_refresh_session(
-        sub=user_id,
-        fingerprint=fingerprint,
-        refresh_session_uuid=refresh_session_uuid,
-        iat=datetime.utcnow(),
-        exp=datetime.utcnow() + timedelta(days=settings.token.refresh_session_expire_days),
-    )
-
-    return refresh_session_uuid
+        return str(refresh_token_uuid)

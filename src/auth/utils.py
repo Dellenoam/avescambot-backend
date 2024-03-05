@@ -1,4 +1,3 @@
-import re
 import bcrypt
 import jwt
 from config import settings
@@ -6,16 +5,16 @@ from config import settings
 
 def encode_jwt(
     payload: dict,
-    private_key: str = settings.crypto.private_key_path.read_text(),
-    algorithm: str = settings.crypto.algorithm,
+    private_key: str = settings.crypto.PRIVATE_KEY_PATH.read_text(),
+    algorithm: str = settings.crypto.ALGORITHM,
 ) -> str:
     return jwt.encode(payload, private_key, algorithm)
 
 
 def decode_jwt(
     token: str | bytes,
-    public_key: str = settings.crypto.public_key_path.read_text(),
-    algorithm: str = settings.crypto.algorithm,
+    public_key: str = settings.crypto.PUBLIC_KEY_PATH.read_text(),
+    algorithm: str = settings.crypto.ALGORITHM,
 ) -> dict | None:
     try:
         return jwt.decode(token, public_key, algorithms=[algorithm])
@@ -24,6 +23,7 @@ def decode_jwt(
 
 
 def hash_password(password: str) -> str:
+    print(password)
     salt = bcrypt.gensalt()
     password_bytes = password.encode()
     return bcrypt.hashpw(password_bytes, salt).decode("utf-8")
