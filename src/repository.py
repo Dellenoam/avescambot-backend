@@ -1,9 +1,12 @@
 from abc import ABC, abstractmethod
+from typing import Any, Dict, Generic, Optional, Type, TypeVar
 from sqlalchemy import select
-from database import async_session
+from database import Base, async_session
+
+ModelType = TypeVar('ModelType', bound=Base)
 
 
-class AbstractRepository(ABC):
+class AbstractRepository(ABC, Generic[ModelType]):
     """
     An abstract base class defining the interface for repository operations.
 
@@ -13,19 +16,19 @@ class AbstractRepository(ABC):
         delete_one: Deletes a specific entity from the repository.
     """
     @abstractmethod
-    async def add_one(self, data: dict):
+    async def add_one(self, data: Dict[str, Any]) -> ModelType:
         raise NotImplementedError
 
     @abstractmethod
-    async def get_one(self, **kwargs):
+    async def get_one(self, **kwargs: Any) -> Optional[ModelType]:
         raise NotImplementedError
     
     @abstractmethod
-    async def delete_one(self, obj_to_delete):
+    async def delete_one(self, obj_to_delete: ModelType) -> None:
         raise NotImplementedError
 
 
-class SQLAlchemyRepository(AbstractRepository):
+class SQLAlchemyRepository(AbstractRepository[ModelType]):
     """
     A concrete implementation of AbstractRepository using SQLAlchemy for database operations.
 
@@ -35,7 +38,7 @@ class SQLAlchemyRepository(AbstractRepository):
     Attributes:
         model: The SQLAlchemy model representing the entity to be managed in the repository.
     """
-    def __init__(self, model):
+    def __init__(self, model: Type[ModelType]):
         """
         Initializes the repository with the specified SQLAlchemy model.
 
@@ -44,7 +47,7 @@ class SQLAlchemyRepository(AbstractRepository):
         """
         self.model = model
 
-    async def add_one(self, data: dict):
+    async def add_one(self, data: Dict[str, Any]) -> ModelType:
         """
         Adds a new entity to the database.
 
@@ -61,7 +64,7 @@ class SQLAlchemyRepository(AbstractRepository):
             await session.refresh(new_obj)
             return new_obj
 
-    async def get_one(self, **kwargs):
+    async def get_one(self, **kwargs: Any) -> ModelType | None:
         """
         Retrieves a single entity based on the specified criteria.
 
@@ -76,7 +79,7 @@ class SQLAlchemyRepository(AbstractRepository):
             result = await session.execute(statement)
             return result.scalar_one_or_none()
     
-    async def delete_one(self, obj_to_delete):
+    async def delete_one(self, obj_to_delete: ModelType) -> None:
         """
         Deletes a specific entity from the database.
 

@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
+from typing import Type
 import uuid
 from fastapi import HTTPException
+from auth.models import RefreshToken, User
 from repository import AbstractRepository
 from .schemas import (
     AuthUser,
@@ -14,8 +16,8 @@ from config import settings
 
 
 class AuthService:
-    def __init__(self, repo: AbstractRepository):
-        self.repo = repo
+    def __init__(self, repo: Type[AbstractRepository[User]]):
+        self.repo = repo()
 
     async def create_new_user(self, user_to_create: UserCreate) -> UserAsResponse:
         """
@@ -89,8 +91,8 @@ class AuthService:
 
 
 class TokenService:
-    def __init__(self, repo: AbstractRepository):
-        self.repo = repo
+    def __init__(self, repo: Type[AbstractRepository[RefreshToken]]):
+        self.repo = repo()
 
     async def create_access_token_and_refresh_token(self, user: AuthUser) -> Tokens:
         """

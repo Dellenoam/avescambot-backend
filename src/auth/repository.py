@@ -2,7 +2,7 @@ from auth.models import RefreshToken, User
 from repository import SQLAlchemyRepository
 
 
-class UserRepository(SQLAlchemyRepository):
+class UserRepository(SQLAlchemyRepository[User]):
     """
     Repository for handling operations related to users.
 
@@ -13,7 +13,7 @@ class UserRepository(SQLAlchemyRepository):
         super().__init__(model=User)
 
 
-class RefreshTokenRepository(SQLAlchemyRepository):
+class RefreshTokenRepository(SQLAlchemyRepository[RefreshToken]):
     """
     Repository for handling operations related to refresh tokens.
 
