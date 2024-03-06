@@ -13,6 +13,16 @@ class UserCreate(UserBase):
 
     @validator("password")
     def validate_password_complexity(cls, password: str) -> str:
+        """
+        Validate the complexity of the password.
+
+        Args:
+            cls: The class.
+            password (str): The password to be validated.
+
+        Returns:
+            str: The validated password.
+        """
         if not re.search("[a-z]", password) or not re.search("[A-Z]", password):
             raise ValueError(
                 "Password must contain at least one uppercase letter and one lowercase letter"
