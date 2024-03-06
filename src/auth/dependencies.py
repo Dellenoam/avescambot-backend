@@ -1,4 +1,4 @@
-from auth.repository import RefreshSessionRepository, UserRepository
+from auth.repository import RefreshTokenRepository, UserRepository
 from auth.services import TokenService, AuthService
 
 
@@ -7,4 +7,4 @@ def auth_service() -> AuthService:
 
 
 def token_service() -> TokenService:
-    return TokenService(RefreshSessionRepository())
+    return TokenService(RefreshTokenRepository())

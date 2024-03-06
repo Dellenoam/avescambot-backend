@@ -13,7 +13,7 @@ class UserRepository(SQLAlchemyRepository):
         super().__init__(model=User)
 
 
-class RefreshSessionRepository(SQLAlchemyRepository):
+class RefreshTokenRepository(SQLAlchemyRepository):
     """
     Repository for handling operations related to refresh tokens.
 
