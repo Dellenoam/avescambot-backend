@@ -36,7 +36,7 @@ Create an .env file and fill in the following configuration parameters using the
 
 ```
 DB_URL = postgresql+asyncpg://username:password@host:port/database_name
-COOKIE_SECURE_FLAG = False
+COOKIE_SECURE_FLAG = False/True
 ```
 
 Create private and public encryption keys
