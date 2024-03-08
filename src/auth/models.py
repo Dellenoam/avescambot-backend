@@ -20,5 +20,5 @@ class RefreshToken(Base):
     sub: Mapped[int] = mapped_column(nullable=False)
     fingerprint: Mapped[str] = mapped_column(nullable=False)
     refresh_token_uuid: Mapped[str] = mapped_column(nullable=False)
-    iat: Mapped[datetime] = mapped_column(nullable=False)
-    exp: Mapped[datetime] = mapped_column(nullable=False)
+    iat: Mapped[int] = mapped_column(nullable=False)
+    exp: Mapped[int] = mapped_column(nullable=False)

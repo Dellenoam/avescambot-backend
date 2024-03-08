@@ -24,7 +24,6 @@ def decode_jwt(
 
 
 def hash_password(password: str) -> str:
-    print(password)
     salt = bcrypt.gensalt()
     password_bytes = password.encode()
     return bcrypt.hashpw(password_bytes, salt).decode("utf-8")

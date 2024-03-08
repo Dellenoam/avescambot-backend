@@ -130,7 +130,7 @@ class TokenService:
         await self.repo.delete_one(refresh_token)
 
         if (
-            refresh_token.exp < datetime.utcnow()
+            refresh_token.exp < int(datetime.utcnow().timestamp())
             or refresh_token.fingerprint != fingerprint
         ):
             raise HTTPException(status_code=401, detail="Invalid refresh token")
@@ -158,9 +158,13 @@ class TokenService:
             payload={
                 "sub": user_id,
                 "scopes": [],
-                "iat": datetime.utcnow(),
-                "exp": datetime.utcnow()
-                + timedelta(minutes=settings.token.ACCESS_TOKEN_EXPIRE_MINUTES),
+                "iat": int(datetime.utcnow().timestamp()),
+                "exp": int(
+                    (
+                        datetime.utcnow()
+                        + timedelta(minutes=settings.token.ACCESS_TOKEN_EXPIRE_MINUTES)
+                    ).timestamp()
+                ),
             }
         )
 
@@ -182,9 +186,13 @@ class TokenService:
             "sub": user_id,
             "fingerprint": fingerprint,
             "refresh_token_uuid": refresh_token_uuid,
-            "iat": datetime.utcnow(),
-            "exp": datetime.utcnow()
-            + timedelta(days=settings.token.REFRESH_TOKEN_EXPIRE_DAYS),
+            "iat": datetime.utcnow().timestamp(),
+            "exp": int(
+                (
+                    datetime.utcnow()
+                    + timedelta(days=settings.token.REFRESH_TOKEN_EXPIRE_DAYS)
+                ).timestamp()
+            ),
         }
         await self.repo.add_one(payload)
 

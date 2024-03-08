@@ -42,7 +42,7 @@ COOKIE_SECURE_FLAG = False
 Create private and public encryption keys
 
 ```
-openssl genrsa -out private.pem 2048
+openssl genrsa -out certs/private.pem 2048
 openssl rsa -in certs/private.pem -outform PEM -pubout -out certs/public.pem
 ```
 
@@ -57,7 +57,7 @@ pip install poetry
 Install dependencies via poetry
 
 ```
-poetry install --no-dev
+poetry install --only main
 ```
 
 Hopefully you have created a database and specified the URL to it in .env, if so apply alembic migration to it.
