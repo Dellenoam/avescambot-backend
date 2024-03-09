@@ -71,3 +71,9 @@ Now you can try to run the server in development mode via the main.py file
 ```
 python src/main.py
 ```
+
+If you haven't changed anything, you can open the API documentation at the following link
+
+```
+http://localhost:8000/docs
+```
