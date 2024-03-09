@@ -69,5 +69,5 @@ alembic upgrade head
 Now you can try running the server through uvicorn
 
 ```
-PYTHONPATH=src uvicorn src.main:app --reload
+python src/main.py
 ```
