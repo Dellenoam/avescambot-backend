@@ -23,7 +23,7 @@ async def register_user(
 
     Args:
         user (UserCreate): Pydantic model representing the user to register.
-        auth_service (Annotated[AuthService, Depends(auth_service)]): The authentication service.
+        auth_service (AuthService): The authentication service.
 
     Returns:
         UserAsResponse: Pydantic model representing the registered user.
