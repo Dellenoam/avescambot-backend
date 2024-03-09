@@ -20,7 +20,7 @@ from src.config import settings
 config = context.config
 
 # set sqlachemy url
-config.set_main_option("sqlalchemy.url", settings.db.DB_URL)
+config.set_main_option("sqlalchemy.url", settings.db.URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

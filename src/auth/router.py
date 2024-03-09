@@ -59,8 +59,8 @@ async def login_user(
         value=str(tokens.refresh_token_uuid),
         httponly=True,
         max_age=settings.token.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
-        path=settings.cookie.COOKIE_PATHS,
-        secure=settings.cookie.COOKIE_SECURE_FLAG,
+        path=settings.cookie.PATHS,
+        secure=settings.cookie.SECURE_FLAG,
     )
 
     return AccessToken(access_token=tokens.access_token)
@@ -94,8 +94,8 @@ async def refresh_access_token(
         value=tokens.refresh_token_uuid,
         httponly=True,
         max_age=settings.token.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
-        path=settings.cookie.COOKIE_PATHS,
-        secure=settings.cookie.COOKIE_SECURE_FLAG,
+        path=settings.cookie.PATHS,
+        secure=settings.cookie.SECURE_FLAG,
     )
 
     return AccessToken(access_token=tokens.access_token)

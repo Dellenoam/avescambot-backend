@@ -35,8 +35,8 @@ git clone https://github.com/Dellenoam/avescambot-backend.git
 Create an .env file and fill in the following configuration parameters using the example below
 
 ```
-DB_URL = postgresql+asyncpg://username:password@host:port/database_name
-COOKIE_SECURE_FLAG = False/True
+DB__URL = postgresql+asyncpg://username:password@host:port/database_name
+COOKIE__SECURE_FLAG = False/True (Choose one)
 ```
 
 Create private and public encryption keys
