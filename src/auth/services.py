@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Type
 import uuid
 from fastapi import HTTPException
@@ -130,7 +130,7 @@ class TokenService:
         await self.repo.delete_one(refresh_token)
 
         if (
-            refresh_token.exp < int(datetime.utcnow().timestamp())
+            refresh_token.exp < int(datetime.now(timezone.utc).timestamp())
             or refresh_token.fingerprint != fingerprint
         ):
             raise HTTPException(status_code=401, detail="Invalid refresh token")
@@ -154,17 +154,14 @@ class TokenService:
         Returns:
             str: The generated access token encoded in JWT.
         """
+        iat = datetime.now(timezone.utc)
+        exp = iat + timedelta(minutes=settings.token.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = encode_jwt(
             payload={
                 "sub": user_id,
                 "scopes": [],
-                "iat": int(datetime.utcnow().timestamp()),
-                "exp": int(
-                    (
-                        datetime.utcnow()
-                        + timedelta(minutes=settings.token.ACCESS_TOKEN_EXPIRE_MINUTES)
-                    ).timestamp()
-                ),
+                "iat": int(iat.timestamp()),
+                "exp": int(exp.timestamp()),
             }
         )
 
@@ -182,17 +179,14 @@ class TokenService:
             str: The generated refresh token UUID.
         """
         refresh_token_uuid = str(uuid.uuid4())
+        iat = datetime.now(timezone.utc)
+        exp = iat + timedelta(days=settings.token.REFRESH_TOKEN_EXPIRE_DAYS)
         payload = {
             "sub": user_id,
             "fingerprint": fingerprint,
             "refresh_token_uuid": refresh_token_uuid,
-            "iat": datetime.utcnow().timestamp(),
-            "exp": int(
-                (
-                    datetime.utcnow()
-                    + timedelta(days=settings.token.REFRESH_TOKEN_EXPIRE_DAYS)
-                ).timestamp()
-            ),
+            "iat": int(iat.timestamp()),
+            "exp": int(exp.timestamp()),
         }
         await self.repo.add_one(payload)
 
