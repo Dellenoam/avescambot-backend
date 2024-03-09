@@ -66,7 +66,7 @@ Hopefully you have created a database and specified the URL to it in .env, if so
 alembic upgrade head
 ```
 
-Now you can try running the server through uvicorn
+Now you can try to run the server in development mode via the main.py file
 
 ```
 python src/main.py
