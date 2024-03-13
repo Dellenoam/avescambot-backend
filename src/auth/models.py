@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from datetime import datetime
+from sqlalchemy import text
 from sqlalchemy.orm import Mapped, mapped_column
 from database import Base
 
@@ -11,7 +12,7 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(nullable=False)
     is_active: Mapped[bool] = mapped_column(nullable=False, default=True)
     is_verified: Mapped[bool] = mapped_column(nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(server_default=text("TIMEZONE('utc', now())"))
 
 
 class RefreshToken(Base):

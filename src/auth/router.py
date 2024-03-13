@@ -4,32 +4,12 @@ from auth.dependencies import auth_service, token_service
 from .services import AuthService, TokenService
 from .schemas import (
     AccessToken,
-    UserCreate,
-    UserAsResponse,
     UserDetails,
     UserLogin,
 )
 from config import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-
-@router.post("/register")
-async def register_user(
-    user: UserCreate, auth_service: Annotated[AuthService, Depends(auth_service)]
-) -> UserAsResponse:
-    """
-    Route to register a new user.
-
-    Args:
-        user (UserCreate): Pydantic model representing the user to register.
-        auth_service (AuthService): The authentication service.
-
-    Returns:
-        UserAsResponse: Pydantic model representing the registered user.
-    """
-    new_user = await auth_service.create_new_user(user)
-    return new_user
 
 
 @router.post("/login")

@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Type
 import uuid
 from fastapi import HTTPException
+from auth.exceptions import UserExistsError
 from auth.models import RefreshToken, User
 from repository import AbstractRepository
 from .schemas import (
@@ -21,7 +22,7 @@ class AuthService:
 
     async def create_new_user(self, user_to_create: UserCreate) -> UserAsResponse:
         """
-        Create a new user.
+        Create a new user. Used via CLI
 
         Args:
             user_to_create (UserCreate): Pydantic model representing the user to create.
@@ -30,13 +31,9 @@ class AuthService:
             UserAsResponse: Pydantic model representing the created user.
         """
         if await self.repo.get_one(username=user_to_create.username):
-            raise HTTPException(
-                status_code=409, detail="User with this username already exists"
-            )
+            raise UserExistsError("User with this username already exists")
         if await self.repo.get_one(email=user_to_create.email):
-            raise HTTPException(
-                status_code=409, detail="User with this email already exists"
-            )
+            raise UserExistsError("User with this email already exists")
 
         user_to_create_dict = user_to_create.model_dump()
         user_to_create_dict["hashed_password"] = hash_password(
@@ -67,7 +64,7 @@ class AuthService:
             status_code=401, detail="Could not validate credentials"
         )
 
-        user_from_db = await self.repo.get_one(email=user.email)
+        user_from_db = await self.repo.get_one(username=user.username)
 
         if not user_from_db:
             raise unauthenticated_exception

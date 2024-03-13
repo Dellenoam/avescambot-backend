@@ -3,12 +3,9 @@ import re
 from pydantic import BaseModel, EmailStr, Field, validator
 
 
-class UserBase(BaseModel):
-    email: EmailStr
-
-
-class UserCreate(UserBase):
+class UserCreate(BaseModel):
     username: str = Field(min_length=4, max_length=32, examples=["username"])
+    email: EmailStr
     password: str = Field(min_length=8, max_length=64, examples=["StrongPassword123!"])
 
     @validator("password")
@@ -35,14 +32,16 @@ class UserCreate(UserBase):
         return password
 
 
-class UserLogin(UserBase):
+class UserLogin(BaseModel):
+    username: str = Field(examples=["username"])
     password: str = Field(examples=["StrongPassword123!"])
     fingerprint: str = Field(examples=["user_browser_fingerprint"])
 
 
-class UserAsResponse(UserBase):
+class UserAsResponse(BaseModel):
     id: int
     username: str = Field(examples=["username"])
+    email: EmailStr
     created_at: datetime
 
 
@@ -57,6 +56,7 @@ class Tokens(BaseModel):
 
 class AccessToken(BaseModel):
     access_token: str = Field(examples=["access_token"])
+    token_type: str = Field(default="bearer", examples=["bearer"])
 
 
 class UserDetails(BaseModel):
