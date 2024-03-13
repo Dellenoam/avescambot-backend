@@ -2,8 +2,6 @@ import argparse
 import asyncio
 import sys
 import os
-import uvicorn
-from auth.management import prepare_user_creation
 
 
 async def main():
@@ -28,8 +26,10 @@ async def main():
     args = parser.parse_args()
 
     if args.command == "runserver":
+        import uvicorn
         uvicorn.run("src.main:app", host=args.host, port=args.port, reload=True)
     elif args.command == "createuser":
+        from auth.management import prepare_user_creation
         await prepare_user_creation()
 
 

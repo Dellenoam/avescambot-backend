@@ -69,7 +69,13 @@ alembic upgrade head
 Now you can try to run the server in development mode via the main.py file
 
 ```
-python src/main.py
+python manage.py runserver
+```
+
+Or you can run it on a specific host or port
+
+```
+python maange.py runserver --host localhost --port 8000
 ```
 
 If you haven't changed anything, you can open the API documentation at the following link
