@@ -113,8 +113,9 @@ class TokenService:
         Returns:
             Tokens: Pydantic model representing the access and refresh tokens.
         """
-        access_token = await self._create_access_token(user.id)
-        refresh_token_uuid = await self._create_refresh_token(user.id, user.fingerprint)
+        async with self._unit_of_work as uow:
+            access_token = await self._create_access_token(user.id)
+            refresh_token_uuid = await self._create_refresh_token(uow, user.id, user.fingerprint)
 
         return Tokens(access_token=access_token, refresh_token_uuid=refresh_token_uuid)
 
@@ -149,7 +150,7 @@ class TokenService:
 
             access_token = await self._create_access_token(refresh_token.sub)
             new_refresh_token_uuid = await self._create_refresh_token(
-                refresh_token.sub, refresh_token.fingerprint
+                uow, refresh_token.sub, refresh_token.fingerprint
             )
 
             await uow.commit()
@@ -181,7 +182,7 @@ class TokenService:
 
         return access_token
 
-    async def _create_refresh_token(self, user_id: int, fingerprint: str) -> str:
+    async def _create_refresh_token(self, uow: AbstractUnitOfWork, user_id: int, fingerprint: str) -> str:
         """
         Create a refresh token for the user.
 
@@ -192,19 +193,16 @@ class TokenService:
         Returns:
             str: The generated refresh token UUID.
         """
-        async with self._unit_of_work as uow:
-            refresh_token_uuid = str(uuid.uuid4())
-            iat = datetime.now(timezone.utc)
-            exp = iat + timedelta(days=settings.token.REFRESH_TOKEN_EXPIRE_DAYS)
-            payload = {
-                "sub": user_id,
-                "fingerprint": fingerprint,
-                "refresh_token_uuid": refresh_token_uuid,
-                "iat": int(iat.timestamp()),
-                "exp": int(exp.timestamp()),
-            }
-            await uow.refresh_token.add(payload)
+        refresh_token_uuid = str(uuid.uuid4())
+        iat = datetime.now(timezone.utc)
+        exp = iat + timedelta(days=settings.token.REFRESH_TOKEN_EXPIRE_DAYS)
+        payload = {
+            "sub": user_id,
+            "fingerprint": fingerprint,
+            "refresh_token_uuid": refresh_token_uuid,
+            "iat": int(iat.timestamp()),
+            "exp": int(exp.timestamp()),
+        }
+        await uow.refresh_token.add(payload)
 
-            await uow.commit()
-
-            return str(refresh_token_uuid)
+        return str(refresh_token_uuid)
