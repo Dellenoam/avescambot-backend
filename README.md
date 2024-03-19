@@ -80,10 +80,30 @@ Or you can run it on a specific host or port
 python mange.py runserver --host localhost --port 8000
 ```
 
-### Accessing API Documentation
+## Accessing API Documentation
 
 If you haven't made any changes, you can access the API documentation at
 
 ```
 http://localhost:8000/docs
+```
+
+## manage.py usage
+
+To start the server
+
+```bash
+python manage.py runserver
+```
+
+To start the server on a specific host or port
+
+```bash
+python manage.py runserver --host localhost --port 8000
+```
+
+To create a user
+
+```bash
+python manage.py createuser
 ```
