@@ -4,7 +4,7 @@ from pydantic import BaseModel, EmailStr, Field, validator
 
 
 class UserCreate(BaseModel):
-    username: str = Field(min_length=4, max_length=32, examples=["username"])
+    username: str = Field(min_length=4, max_length=20, examples=["username"])
     email: EmailStr
     password: str = Field(min_length=8, max_length=64, examples=["StrongPassword123!"])
 
@@ -22,12 +22,14 @@ class UserCreate(BaseModel):
         """
         if not re.search("[a-z]", password) or not re.search("[A-Z]", password):
             raise ValueError(
-                "Password must contain at least one uppercase letter and one lowercase letter"
+                "password must contain at least one uppercase letter and one lowercase letter"
             )
+
         if not re.search("[0-9]", password):
-            raise ValueError("Password must contain at least one digit")
+            raise ValueError("password must contain at least one digit")
+
         if not re.search("[!@#$%^&*()_+{}:<>?]", password):
-            raise ValueError("Password must contain at least one special character")
+            raise ValueError("password must contain at least one special character")
 
         return password
 

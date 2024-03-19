@@ -16,7 +16,7 @@ class CryptoSettings(BaseModel):
 
 
 class TokenSettings(BaseModel):
-    ACCESS_TOKEN_EXPIRE_MINUTES: PositiveInt = 7
+    ACCESS_TOKEN_EXPIRE_MINUTES: PositiveInt = 15
     REFRESH_TOKEN_EXPIRE_DAYS: PositiveInt = 7
 
 

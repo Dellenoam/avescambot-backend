@@ -1,3 +1,4 @@
+from sqlalchemy.ext.asyncio import AsyncSession
 from auth.models import RefreshToken, User
 from repository import SQLAlchemyRepository
 
@@ -9,8 +10,9 @@ class UserRepository(SQLAlchemyRepository[User]):
     Inherits:
         SQLAlchemyRepository: A base repository class providing common database operations.
     """
-    def __init__(self):
-        super().__init__(model=User)
+
+    def __init__(self, session: AsyncSession):
+        super().__init__(session=session, model_cls=User)
 
 
 class RefreshTokenRepository(SQLAlchemyRepository[RefreshToken]):
@@ -20,5 +22,6 @@ class RefreshTokenRepository(SQLAlchemyRepository[RefreshToken]):
     Inherits:
         SQLAlchemyRepository: A base repository class providing common database operations.
     """
-    def __init__(self):
-        super().__init__(model=RefreshToken)
+
+    def __init__(self, session: AsyncSession):
+        super().__init__(session=session, model_cls=RefreshToken)

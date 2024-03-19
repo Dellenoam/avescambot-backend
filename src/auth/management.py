@@ -1,4 +1,5 @@
 from getpass import getpass
+from pydantic import ValidationError
 from auth.dependencies import auth_service
 from auth.exceptions import UserExistsError
 from auth.schemas import UserCreate
@@ -9,18 +10,28 @@ from auth.schemas import UserCreate
 
 async def prepare_user_creation():
     """
-    Asynchronously prepares for the creation of a new user. 
-    Prompts the user for a username, password, and email. 
-    Creates a new UserCreate pydantic model with the provided username, password, and email. 
-    Calls the auth_service to create a new user with the provided UserCreate pydantic model. 
-    If the user already exists, it prints a message and returns. 
-    Otherwise, it prints a success message.
+    Prepare the user creation by asking for the user's information
     """
     username = input("Enter username: ")
     password = getpass("Enter password: ")
+    password_confirm = getpass("Confirm password: ")
     email = input("Enter email: ")
 
-    new_user = UserCreate(username=username, password=password, email=email)
+    if password != password_confirm:
+        print("Passwords do not match")
+        return
+
+    try:
+        new_user = UserCreate(username=username, password=password, email=email)
+    except ValidationError as exc:
+        print()
+        print("Validation error")
+        for error in exc.errors():
+            if error["loc"][0] == "email":
+                print(f"{error['loc'][0]}: {error['ctx']['reason'].lower()}")  # type: ignore
+            else:
+                print(f"{error['loc'][0]}: {error['msg'].lower()}")
+        return
 
     AuthService = auth_service()
     try:

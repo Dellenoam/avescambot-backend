@@ -1,10 +1,10 @@
-from auth.repository import RefreshTokenRepository, UserRepository
 from auth.services import TokenService, AuthService
+from unitofwork import UnitOfWork
 
 
 def auth_service() -> AuthService:
-    return AuthService(UserRepository)
+    return AuthService(UnitOfWork)
 
 
 def token_service() -> TokenService:
-    return TokenService(RefreshTokenRepository)
+    return TokenService(UnitOfWork)

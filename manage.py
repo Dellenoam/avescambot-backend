@@ -1,4 +1,5 @@
-import click
+import asyncio
+import asyncclick as click
 import sys
 import os
 
@@ -11,8 +12,17 @@ def main():
 
 
 @main.command()
-@click.option("--port", type=int, default=8000, help="Port number to run the server on (default: 8000)")
-@click.option("--host", default="localhost", help="Host address to run the server on (default: localhost)")
+@click.option(
+    "--port",
+    type=int,
+    default=8000,
+    help="Port number to run the server on (default: 8000)",
+)
+@click.option(
+    "--host",
+    default="localhost",
+    help="Host address to run the server on (default: localhost)",
+)
 def runserver(port: int, host: str):
     """
     Start the server
@@ -34,4 +44,4 @@ async def createuser():
 
 if __name__ == "__main__":
     sys.path.append(os.path.join(sys.path[0], "src"))
-    main()
+    asyncio.run(main())
