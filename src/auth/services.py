@@ -52,6 +52,8 @@ class AuthService:
                 username=new_user.username,
                 created_at=new_user.created_at,
             )
+
+            await uow.commit()
             return new_user
 
     async def validate_user(self, user: UserLogin) -> AuthUser:
