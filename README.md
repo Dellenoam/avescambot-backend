@@ -24,7 +24,7 @@ At the moment only JWT authentication is implemented.
 
 Implement storing JWT refresh tokens on Redis instead of PostgreSQL to quickly refresh access tokens.
 
-Implement the Unit of Work pattern.
+~~Implement the Unit of Work pattern.~~
 
 ## How to use
 
